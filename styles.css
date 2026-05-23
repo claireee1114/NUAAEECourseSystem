@@ -202,6 +202,13 @@ body[data-view="studentView"] .admin-only-stat {
   margin-bottom: 18px;
 }
 
+.student-message {
+  min-height: 26px;
+  margin: -4px 0 12px;
+  color: var(--green-dark);
+  font-weight: 800;
+}
+
 label span {
   display: block;
   margin-bottom: 7px;
@@ -252,6 +259,11 @@ textarea:focus {
 
 .course-card {
   overflow: hidden;
+}
+
+.course-card.is-signed {
+  border-color: rgba(36, 115, 91, 0.42);
+  background: linear-gradient(180deg, #ffffff 0%, #f4faf3 100%);
 }
 
 .course-visual {
@@ -377,6 +389,10 @@ dd {
 .primary-btn:disabled {
   cursor: not-allowed;
   background: #a2aaa5;
+}
+
+.course-card.is-signed .primary-btn:disabled {
+  background: var(--green-dark);
 }
 
 .admin-card {

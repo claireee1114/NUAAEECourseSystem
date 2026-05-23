@@ -1,4 +1,5 @@
 const adminKey = "course-stat-system:admin-token";
+const signedKey = "course-stat-system:signed-courses";
 const apiBase = window.location.protocol === "file:" ? "http://127.0.0.1:3000" : "";
 
 let courses = [];
@@ -22,6 +23,7 @@ const els = {
   loginForm: document.querySelector("#loginForm"),
   adminUser: document.querySelector("#adminUser"),
   adminPass: document.querySelector("#adminPass"),
+  studentMessage: document.querySelector("#studentMessage"),
   loginMessage: document.querySelector("#loginMessage"),
   logoutBtn: document.querySelector("#logoutBtn"),
   courseForm: document.querySelector("#courseForm"),
@@ -55,6 +57,25 @@ function getToken() {
   return sessionStorage.getItem(adminKey);
 }
 
+function getSignedCourses() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(signedKey) || "[]");
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function hasSignedUp(id) {
+  return getSignedCourses().includes(id);
+}
+
+function rememberSignup(id) {
+  const signed = new Set(getSignedCourses());
+  signed.add(id);
+  localStorage.setItem(signedKey, JSON.stringify([...signed]));
+}
+
 async function api(path, options = {}) {
   const headers = { ...(options.headers || {}) };
   if (options.body && !headers["Content-Type"]) {
@@ -75,9 +96,15 @@ async function api(path, options = {}) {
 
 function announce(message) {
   els.liveStatus.textContent = message;
+  if (els.studentMessage) {
+    els.studentMessage.textContent = message;
+  }
   window.clearTimeout(announce.timer);
   announce.timer = window.setTimeout(() => {
     els.liveStatus.textContent = "数据已同步";
+    if (els.studentMessage) {
+      els.studentMessage.textContent = "";
+    }
   }, 1800);
 }
 
@@ -130,9 +157,11 @@ function renderStudentCourses() {
 
   filtered.forEach((course) => {
     const node = els.courseTemplate.content.firstElementChild.cloneNode(true);
+    const signed = hasSignedUp(course.id);
     node.style.setProperty("--visual", visualMap[course.category] || visualMap["设计"]);
+    node.classList.toggle("is-signed", signed);
     node.querySelector(".tag").textContent = course.category;
-    node.querySelector(".seats").textContent = remaining(course) === 0 ? "名额已满" : "";
+    node.querySelector(".seats").textContent = signed ? "已报名" : remaining(course) === 0 ? "名额已满" : "";
     node.querySelector("h3").textContent = course.title;
     node.querySelector(".description").textContent = course.description;
     node.querySelector(".date").textContent = formatDate(course.time);
@@ -140,7 +169,10 @@ function renderStudentCourses() {
     node.querySelector(".teacher").textContent = course.teacher;
 
     const signupBtn = node.querySelector(".signup-btn");
-    if (remaining(course) === 0) {
+    if (signed) {
+      signupBtn.textContent = "已报名";
+      signupBtn.disabled = true;
+    } else if (remaining(course) === 0) {
       signupBtn.textContent = "名额已满";
       signupBtn.disabled = true;
     }
@@ -224,8 +256,14 @@ function connectRealtime() {
 }
 
 async function signUp(id) {
+  if (hasSignedUp(id)) {
+    announce("你已报名该课程");
+    return;
+  }
+
   try {
     const data = await api(`/api/courses/${encodeURIComponent(id)}/signup`, { method: "POST" });
+    rememberSignup(id);
     courses = data.courses;
     render();
     announce("报名成功");
