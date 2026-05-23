@@ -1,0 +1,46 @@
+[
+  {
+    "id": "c-design-101",
+    "title": "用户体验设计工作坊",
+    "category": "设计",
+    "time": "2026-06-02T14:00",
+    "location": "创意中心 302",
+    "teacher": "林若宁",
+    "capacity": 36,
+    "enrolled": 21,
+    "description": "从用户访谈、信息架构到低保真原型，完成一次完整的产品设计练习。"
+  },
+  {
+    "id": "c-code-201",
+    "title": "Python 数据分析入门",
+    "category": "编程",
+    "time": "2026-06-05T19:00",
+    "location": "线上直播",
+    "teacher": "陈一航",
+    "capacity": 80,
+    "enrolled": 53,
+    "description": "学习 Pandas、数据清洗和可视化基础，适合零基础或转岗学习者。"
+  },
+  {
+    "id": "c-biz-108",
+    "title": "商业计划书实战",
+    "category": "商业",
+    "time": "2026-06-09T10:00",
+    "location": "教学楼 B204",
+    "teacher": "周蔚",
+    "capacity": 42,
+    "enrolled": 18,
+    "description": "围绕市场规模、竞品、盈利模型和路演表达，打磨一份可展示的计划书。"
+  },
+  {
+    "id": "c-lang-302",
+    "title": "职场英语表达训练",
+    "category": "语言",
+    "time": "2026-06-12T18:30",
+    "location": "语言中心 110",
+    "teacher": "Mia Zhang",
+    "capacity": 30,
+    "enrolled": 27,
+    "description": "覆盖会议发言、邮件写作和项目汇报，提升职场英文沟通的清晰度。"
+  }
+]

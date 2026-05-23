@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>课程统计系统</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-view="studentView">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Course Enrollment</p>
+        <h1>课程统计系统</h1>
+      </div>
+      <nav class="role-switch" aria-label="入口切换">
+        <button class="role-btn active" data-view="studentView">学生入口</button>
+        <button class="role-btn" data-view="adminView">管理员入口</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="overview" aria-label="课程统计概览">
+        <div class="stat-panel">
+          <span class="stat-label">课程总数</span>
+          <strong id="totalCourses">0</strong>
+        </div>
+        <div class="stat-panel admin-only-stat">
+          <span class="stat-label">已报名人数</span>
+          <strong id="totalEnrolled">0</strong>
+        </div>
+        <div class="stat-panel admin-only-stat">
+          <span class="stat-label">剩余名额</span>
+          <strong id="totalSeats">0</strong>
+        </div>
+        <div class="activity-panel admin-only-stat">
+          <span class="pulse"></span>
+          <span id="liveStatus">数据已同步</span>
+        </div>
+      </section>
+
+      <section id="studentView" class="view active">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Student</p>
+            <h2>选择想上的课程</h2>
+          </div>
+          <span class="small-note" id="studentCount">0 门课程可选</span>
+        </div>
+
+        <form class="filters" id="searchForm" aria-label="课程搜索">
+          <label>
+            <span>关键词</span>
+            <input id="keywordInput" type="search" placeholder="课程内容、讲师、地点" />
+          </label>
+          <label>
+            <span>开始时间</span>
+            <input id="dateInput" type="date" />
+          </label>
+          <label>
+            <span>课程类型</span>
+            <select id="categoryInput">
+              <option value="">全部类型</option>
+              <option value="设计">设计</option>
+              <option value="编程">编程</option>
+              <option value="商业">商业</option>
+              <option value="语言">语言</option>
+            </select>
+          </label>
+          <button type="button" id="resetFilters">重置</button>
+        </form>
+
+        <div id="courseList" class="course-grid" aria-live="polite"></div>
+      </section>
+
+      <section id="adminView" class="view">
+        <div id="loginPanel" class="admin-card login-card">
+          <div>
+            <p class="eyebrow">Admin</p>
+            <h2>管理员登录</h2>
+          </div>
+          <form id="loginForm" class="login-form">
+            <label>
+              <span>账号</span>
+              <input id="adminUser" autocomplete="username" value="admin" />
+            </label>
+            <label>
+              <span>密码</span>
+              <input id="adminPass" type="password" autocomplete="current-password" placeholder="输入 admin123" />
+            </label>
+            <button class="primary-btn" type="submit">登录</button>
+            <p id="loginMessage" class="form-message"></p>
+          </form>
+        </div>
+
+        <div id="adminPanel" class="admin-workspace hidden">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Dashboard</p>
+              <h2>课程管理与实时报名</h2>
+            </div>
+            <button id="logoutBtn" class="ghost-btn" type="button">退出登录</button>
+          </div>
+
+          <div class="admin-layout">
+            <section class="admin-card">
+              <div class="card-head">
+                <h3 id="formTitle">新增课程</h3>
+                <button id="clearFormBtn" class="ghost-btn" type="button">清空</button>
+              </div>
+              <form id="courseForm" class="course-form">
+                <input id="courseId" type="hidden" />
+                <label>
+                  <span>课程名称</span>
+                  <input id="titleInput" required placeholder="例如：数据分析入门" />
+                </label>
+                <label>
+                  <span>课程类型</span>
+                  <select id="adminCategoryInput" required>
+                    <option value="设计">设计</option>
+                    <option value="编程">编程</option>
+                    <option value="商业">商业</option>
+                    <option value="语言">语言</option>
+                  </select>
+                </label>
+                <label>
+                  <span>课程时间</span>
+                  <input id="timeInput" type="datetime-local" required />
+                </label>
+                <label>
+                  <span>地点</span>
+                  <input id="locationInput" required placeholder="线上 / 教室 A301" />
+                </label>
+                <label>
+                  <span>讲师</span>
+                  <input id="teacherInput" required placeholder="讲师姓名" />
+                </label>
+                <div class="two-cols">
+                  <label>
+                    <span>总名额</span>
+                    <input id="capacityInput" type="number" min="1" required />
+                  </label>
+                  <label>
+                    <span>已报名</span>
+                    <input id="enrolledInput" type="number" min="0" required />
+                  </label>
+                </div>
+                <label>
+                  <span>课程内容</span>
+                  <textarea id="descriptionInput" rows="4" required placeholder="面向学生展示的课程简介"></textarea>
+                </label>
+                <button class="primary-btn" type="submit">保存课程</button>
+              </form>
+            </section>
+
+            <section class="admin-card">
+              <div class="card-head">
+                <h3>课程数据</h3>
+                <div class="file-actions">
+                  <label class="file-btn">
+                    上传 JSON
+                    <input id="importInput" type="file" accept="application/json" />
+                  </label>
+                  <button id="exportBtn" class="ghost-btn" type="button">导出</button>
+                </div>
+              </div>
+              <div id="adminCourseList" class="admin-list"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <template id="courseTemplate">
+      <article class="course-card">
+        <div class="course-visual" aria-hidden="true">
+          <span class="visual-mark"></span>
+        </div>
+        <div class="course-body">
+          <div class="course-meta">
+            <span class="tag"></span>
+            <span class="seats"></span>
+          </div>
+          <h3></h3>
+          <p class="description"></p>
+          <dl>
+            <div><dt>时间</dt><dd class="date"></dd></div>
+            <div><dt>地点</dt><dd class="location"></dd></div>
+            <div><dt>讲师</dt><dd class="teacher"></dd></div>
+          </dl>
+          <button class="primary-btn signup-btn" type="button">报名</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
