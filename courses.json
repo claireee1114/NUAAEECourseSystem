@@ -32,5 +32,17 @@
       }
     ],
     "description": "覆盖生成式 AI、数据治理和业务智能分析，帮助学员理解企业数字化应用。"
+  },
+  {
+    "id": "c-1779602942101",
+    "title": "低空经济发展现状与未来展望",
+    "category": "低空经济",
+    "time": "2026-06-07T14:00",
+    "location": "教学楼 B204",
+    "teacher": "张卓",
+    "capacity": 50,
+    "enrolled": 0,
+    "students": [],
+    "description": "低空经济发展现状与未来展望"
   }
 ]
