@@ -24,8 +24,13 @@
     "location": "数字化教室 110",
     "teacher": "Mia Zhang",
     "capacity": 30,
-    "enrolled": 0,
-    "students": [],
+    "enrolled": 1,
+    "students": [
+      {
+        "name": "Yingru",
+        "signedAt": "2026-05-24T03:39:24.475Z"
+      }
+    ],
     "description": "覆盖生成式 AI、数据治理和业务智能分析，帮助学员理解企业数字化应用。"
   }
 ]
