@@ -7,11 +7,15 @@
     "location": "教学楼 B204",
     "teacher": "周蔚",
     "capacity": 42,
-    "enrolled": 1,
+    "enrolled": 2,
     "students": [
       {
         "name": "Yingru",
         "signedAt": "2026-05-24T03:39:18.788Z"
+      },
+      {
+        "name": "Han",
+        "signedAt": "2026-05-24T07:16:36.646Z"
       }
     ],
     "description": "围绕无人机应用、产业政策、场景落地和商业模式，理解低空经济发展机会。"
