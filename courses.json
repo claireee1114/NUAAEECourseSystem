@@ -1,17 +1,5 @@
 [
   {
-    "id": "c-code-201",
-    "title": "财务数据分析入门",
-    "category": "金融财税",
-    "time": "2026-06-05T19:00",
-    "location": "线上直播",
-    "teacher": "陈一航",
-    "capacity": 80,
-    "enrolled": 53,
-    "students": [],
-    "description": "学习财务指标、税务基础和数据分析方法，适合企业管理者和财务入门学习者。"
-  },
-  {
     "id": "c-biz-108",
     "title": "低空经济产业趋势研修",
     "category": "低空经济",
