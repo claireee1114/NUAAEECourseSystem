@@ -10,6 +10,11 @@ const port = Number(process.env.PORT || 3000);
 const adminUser = process.env.ADMIN_USER || "admin";
 const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
 const adminToken = crypto.randomBytes(32).toString("hex");
+const githubToken = process.env.GITHUB_TOKEN;
+const githubOwner = process.env.GITHUB_OWNER;
+const githubRepo = process.env.GITHUB_REPO;
+const githubBranch = process.env.GITHUB_BRANCH || "main";
+const githubDataPath = process.env.GITHUB_DATA_PATH || "courses.json";
 const clients = new Set();
 
 const mimeTypes = {
@@ -24,6 +29,18 @@ function readCourses() {
   return JSON.parse(fs.readFileSync(dataFile, "utf8"));
 }
 
+async function initializeDataFile() {
+  ensureDataFile();
+  if (!isGithubStorageEnabled()) return;
+
+  const githubCourses = await readCoursesFromGithub();
+  if (githubCourses) {
+    fs.writeFileSync(dataFile, `${JSON.stringify(githubCourses.map(normalizeCourse), null, 2)}\n`);
+  } else {
+    await writeCoursesToGithub(readCourses(), "Initialize course data");
+  }
+}
+
 function ensureDataFile() {
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
@@ -35,23 +52,106 @@ function ensureDataFile() {
 
 function normalizeCourse(course) {
   const capacity = Math.max(1, Number(course.capacity) || 1);
-  const enrolled = Math.max(0, Math.min(Number(course.enrolled) || 0, capacity));
+  const students = normalizeStudents(course.students || course.registrations || []);
+  const enrolled = Math.max(0, Math.min(Number(course.enrolled) || students.length || 0, capacity));
   return {
     id: String(course.id || `c-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`),
     title: String(course.title || "未命名课程"),
-    category: String(course.category || "设计"),
+    category: String(course.category || "商业管理"),
     time: String(course.time || new Date().toISOString().slice(0, 16)),
     location: String(course.location || "待定"),
     teacher: String(course.teacher || "待定"),
     capacity,
     enrolled,
+    students,
     description: String(course.description || "课程信息待补充")
   };
 }
 
-function writeCourses(courses) {
-  fs.writeFileSync(dataFile, `${JSON.stringify(courses.map(normalizeCourse), null, 2)}\n`);
-  broadcastCourses();
+function normalizeStudents(students) {
+  if (!Array.isArray(students)) return [];
+  return students
+    .map((student) => {
+      if (typeof student === "string") {
+        return { name: student.trim(), signedAt: "" };
+      }
+      return {
+        name: String(student.name || "").trim(),
+        signedAt: String(student.signedAt || "")
+      };
+    })
+    .filter((student) => student.name)
+    .slice(0, 1000);
+}
+
+async function writeCourses(courses) {
+  const normalized = courses.map(normalizeCourse);
+  fs.writeFileSync(dataFile, `${JSON.stringify(normalized, null, 2)}\n`);
+  if (isGithubStorageEnabled()) {
+    await writeCoursesToGithub(normalized, "Update course data");
+  }
+  broadcastCourses(normalized);
+}
+
+function isGithubStorageEnabled() {
+  return Boolean(githubToken && githubOwner && githubRepo);
+}
+
+async function githubRequest(pathname, options = {}) {
+  const response = await fetch(`https://api.github.com${pathname}`, {
+    ...options,
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${githubToken}`,
+      "Content-Type": "application/json",
+      "User-Agent": "course-stat-system",
+      "X-GitHub-Api-Version": "2022-11-28",
+      ...(options.headers || {})
+    }
+  });
+
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    throw new Error(data?.message || "GitHub 数据保存失败");
+  }
+  return data;
+}
+
+async function getGithubFile() {
+  try {
+    return await githubRequest(
+      `/repos/${githubOwner}/${githubRepo}/contents/${encodeGithubPath(githubDataPath)}?ref=${encodeURIComponent(githubBranch)}`
+    );
+  } catch (error) {
+    if (error.message.includes("Not Found")) return null;
+    throw error;
+  }
+}
+
+function encodeGithubPath(filePath) {
+  return filePath.split("/").map(encodeURIComponent).join("/");
+}
+
+async function readCoursesFromGithub() {
+  const file = await getGithubFile();
+  if (!file?.content) return null;
+  const content = Buffer.from(file.content, "base64").toString("utf8");
+  const courses = JSON.parse(content);
+  return Array.isArray(courses) ? courses : null;
+}
+
+async function writeCoursesToGithub(courses, message) {
+  const file = await getGithubFile();
+  await githubRequest(`/repos/${githubOwner}/${githubRepo}/contents/${encodeGithubPath(githubDataPath)}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      message,
+      branch: githubBranch,
+      content: Buffer.from(`${JSON.stringify(courses, null, 2)}\n`).toString("base64"),
+      ...(file?.sha ? { sha: file.sha } : {})
+    })
+  });
 }
 
 function send(res, status, data) {
@@ -92,8 +192,8 @@ function readBody(req) {
   });
 }
 
-function broadcastCourses() {
-  const payload = `event: courses\ndata: ${JSON.stringify(readCourses())}\n\n`;
+function broadcastCourses(courses = readCourses()) {
+  const payload = `event: courses\ndata: ${JSON.stringify(courses)}\n\n`;
   for (const client of clients) {
     client.write(payload);
   }
@@ -153,6 +253,8 @@ async function handleApi(req, res) {
 
   const signupMatch = url.pathname.match(/^\/api\/courses\/([^/]+)\/signup$/);
   if (req.method === "POST" && signupMatch) {
+    const body = await readBody(req);
+    const studentName = String(body.name || "").trim().slice(0, 40);
     const id = decodeURIComponent(signupMatch[1]);
     const courses = readCourses();
     const course = courses.find((item) => item.id === id);
@@ -160,12 +262,21 @@ async function handleApi(req, res) {
       sendError(res, 404, "课程不存在");
       return;
     }
+    if (!studentName) {
+      sendError(res, 400, "请输入姓名");
+      return;
+    }
     if (course.enrolled >= course.capacity) {
       sendError(res, 409, "课程名额已满");
       return;
     }
+    course.students = normalizeStudents(course.students);
+    course.students.push({
+      name: studentName,
+      signedAt: new Date().toISOString()
+    });
     course.enrolled += 1;
-    writeCourses(courses);
+    await writeCourses(courses);
     send(res, 200, { courses: readCourses() });
     return;
   }
@@ -179,7 +290,7 @@ async function handleApi(req, res) {
     const body = await readBody(req);
     const courses = readCourses();
     courses.push(normalizeCourse(body));
-    writeCourses(courses);
+    await writeCourses(courses);
     send(res, 200, { courses: readCourses() });
     return;
   }
@@ -190,7 +301,7 @@ async function handleApi(req, res) {
       sendError(res, 400, "课程数据必须是数组");
       return;
     }
-    writeCourses(body.courses);
+    await writeCourses(body.courses);
     send(res, 200, { courses: readCourses() });
     return;
   }
@@ -209,14 +320,14 @@ async function handleApi(req, res) {
     if (req.method === "PUT") {
       const body = await readBody(req);
       courses[index] = normalizeCourse({ ...body, id });
-      writeCourses(courses);
+      await writeCourses(courses);
       send(res, 200, { courses: readCourses() });
       return;
     }
 
     if (req.method === "DELETE") {
       courses.splice(index, 1);
-      writeCourses(courses);
+      await writeCourses(courses);
       send(res, 200, { courses: readCourses() });
       return;
     }
@@ -227,6 +338,7 @@ async function handleApi(req, res) {
 
 const server = http.createServer(async (req, res) => {
   try {
+    await dataReady;
     if (req.url.startsWith("/api/")) {
       await handleApi(req, res);
       return;
@@ -237,9 +349,11 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+const dataReady = initializeDataFile();
+
 server.listen(port, () => {
-  ensureDataFile();
   console.log(`Course system is running at http://localhost:${port}`);
   console.log(`Admin account: ${adminUser} / ${adminPassword}`);
   console.log(`Course data file: ${dataFile}`);
+  console.log(`GitHub storage: ${isGithubStorageEnabled() ? "enabled" : "disabled"}`);
 });

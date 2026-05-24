@@ -480,6 +480,11 @@ dd {
   font-size: 0.9rem;
 }
 
+.admin-row .student-names {
+  color: var(--green-dark);
+  line-height: 1.5;
+}
+
 .row-actions {
   display: flex;
   gap: 8px;

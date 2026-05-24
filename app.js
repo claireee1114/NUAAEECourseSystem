@@ -47,10 +47,14 @@ const formFields = {
 };
 
 const visualMap = {
-  "设计": "linear-gradient(135deg, #24735b, #86a859)",
-  "编程": "linear-gradient(135deg, #2d5f8f, #56a0a4)",
-  "商业": "linear-gradient(135deg, #b7811f, #d38f6a)",
-  "语言": "linear-gradient(135deg, #c95f48, #806bb2)"
+  "商业管理": "linear-gradient(135deg, #24735b, #86a859)",
+  "金融财税": "linear-gradient(135deg, #2d5f8f, #56a0a4)",
+  "低空经济": "linear-gradient(135deg, #b7811f, #d38f6a)",
+  "人工智能与大数据": "linear-gradient(135deg, #4f6fb0, #56a0a4)",
+  "新能源与碳中和": "linear-gradient(135deg, #1d7a68, #a4b84f)",
+  "公共安全与应急管理": "linear-gradient(135deg, #c95f48, #b7811f)",
+  "智能制造": "linear-gradient(135deg, #57616f, #2d5f8f)",
+  "党政教育": "linear-gradient(135deg, #b84c4c, #806bb2)"
 };
 
 function getToken() {
@@ -84,7 +88,12 @@ async function api(path, options = {}) {
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const response = await fetch(`${apiBase}${path}`, { ...options, headers });
+  let response;
+  try {
+    response = await fetch(`${apiBase}${path}`, { ...options, headers });
+  } catch {
+    throw new Error("无法连接服务器，请确认已通过部署网址打开，或本地后端已启动");
+  }
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
 
@@ -158,7 +167,7 @@ function renderStudentCourses() {
   filtered.forEach((course) => {
     const node = els.courseTemplate.content.firstElementChild.cloneNode(true);
     const signed = hasSignedUp(course.id);
-    node.style.setProperty("--visual", visualMap[course.category] || visualMap["设计"]);
+    node.style.setProperty("--visual", visualMap[course.category] || visualMap["商业管理"]);
     node.classList.toggle("is-signed", signed);
     node.querySelector(".tag").textContent = course.category;
     node.querySelector(".seats").textContent = signed ? "已报名" : remaining(course) === 0 ? "名额已满" : "";
@@ -198,9 +207,13 @@ function renderAdminCourses() {
       const summary = document.createElement("div");
       const title = document.createElement("strong");
       const meta = document.createElement("p");
+      const students = document.createElement("p");
+      const studentNames = getStudentNames(course);
       title.textContent = course.title;
       meta.textContent = `${formatDate(course.time)} · ${course.category} · ${course.enrolled}/${course.capacity} 人`;
-      summary.append(title, meta);
+      students.className = "student-names";
+      students.textContent = studentNames.length ? `已报名学生：${studentNames.join("、")}` : "暂无学生报名";
+      summary.append(title, meta, students);
 
       const actions = document.createElement("div");
       actions.className = "row-actions";
@@ -261,8 +274,17 @@ async function signUp(id) {
     return;
   }
 
+  const name = window.prompt("请输入报名学生姓名");
+  if (!name || !name.trim()) {
+    announce("已取消报名");
+    return;
+  }
+
   try {
-    const data = await api(`/api/courses/${encodeURIComponent(id)}/signup`, { method: "POST" });
+    const data = await api(`/api/courses/${encodeURIComponent(id)}/signup`, {
+      method: "POST",
+      body: JSON.stringify({ name: name.trim() })
+    });
     rememberSignup(id);
     courses = data.courses;
     render();
@@ -272,10 +294,17 @@ async function signUp(id) {
   }
 }
 
+function getStudentNames(course) {
+  if (!Array.isArray(course.students)) return [];
+  return course.students
+    .map((student) => (typeof student === "string" ? student : student.name))
+    .filter(Boolean);
+}
+
 function resetForm() {
   els.courseForm.reset();
   formFields.id.value = "";
-  formFields.category.value = "设计";
+  formFields.category.value = "商业管理";
   els.formTitle.textContent = "新增课程";
 }
 
@@ -392,8 +421,8 @@ els.loginForm.addEventListener("submit", async (event) => {
     els.adminPanel.classList.remove("hidden");
     els.loginMessage.textContent = "";
     announce("管理员已登录");
-  } catch {
-    els.loginMessage.textContent = "账号或密码不正确";
+  } catch (error) {
+    els.loginMessage.textContent = error.message;
   }
 });
 

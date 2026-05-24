@@ -1,46 +1,50 @@
 [
   {
     "id": "c-design-101",
-    "title": "用户体验设计工作坊",
-    "category": "设计",
+    "title": "组织管理与领导力工作坊",
+    "category": "商业管理",
     "time": "2026-06-02T14:00",
     "location": "创意中心 302",
     "teacher": "林若宁",
     "capacity": 36,
     "enrolled": 21,
-    "description": "从用户访谈、信息架构到低保真原型，完成一次完整的产品设计练习。"
+    "students": [],
+    "description": "围绕团队协作、目标拆解和管理沟通，完成一次真实业务场景下的管理练习。"
   },
   {
     "id": "c-code-201",
-    "title": "Python 数据分析入门",
-    "category": "编程",
+    "title": "财务数据分析入门",
+    "category": "金融财税",
     "time": "2026-06-05T19:00",
     "location": "线上直播",
     "teacher": "陈一航",
     "capacity": 80,
     "enrolled": 53,
-    "description": "学习 Pandas、数据清洗和可视化基础，适合零基础或转岗学习者。"
+    "students": [],
+    "description": "学习财务指标、税务基础和数据分析方法，适合企业管理者和财务入门学习者。"
   },
   {
     "id": "c-biz-108",
-    "title": "商业计划书实战",
-    "category": "商业",
+    "title": "低空经济产业趋势研修",
+    "category": "低空经济",
     "time": "2026-06-09T10:00",
     "location": "教学楼 B204",
     "teacher": "周蔚",
     "capacity": 42,
     "enrolled": 18,
-    "description": "围绕市场规模、竞品、盈利模型和路演表达，打磨一份可展示的计划书。"
+    "students": [],
+    "description": "围绕无人机应用、产业政策、场景落地和商业模式，理解低空经济发展机会。"
   },
   {
     "id": "c-lang-302",
-    "title": "职场英语表达训练",
-    "category": "语言",
+    "title": "人工智能与大数据应用",
+    "category": "人工智能与大数据",
     "time": "2026-06-12T18:30",
-    "location": "语言中心 110",
+    "location": "数字化教室 110",
     "teacher": "Mia Zhang",
     "capacity": 30,
     "enrolled": 27,
-    "description": "覆盖会议发言、邮件写作和项目汇报，提升职场英文沟通的清晰度。"
+    "students": [],
+    "description": "覆盖生成式 AI、数据治理和业务智能分析，帮助学员理解企业数字化应用。"
   }
 ]
