@@ -1,17 +1,5 @@
 [
   {
-    "id": "c-design-101",
-    "title": "组织管理与领导力工作坊",
-    "category": "商业管理",
-    "time": "2026-06-02T14:00",
-    "location": "创意中心 302",
-    "teacher": "林若宁",
-    "capacity": 36,
-    "enrolled": 21,
-    "students": [],
-    "description": "围绕团队协作、目标拆解和管理沟通，完成一次真实业务场景下的管理练习。"
-  },
-  {
     "id": "c-code-201",
     "title": "财务数据分析入门",
     "category": "金融财税",
