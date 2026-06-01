@@ -53,11 +53,15 @@
     "location": "教学楼 B204",
     "teacher": "张卓",
     "capacity": 50,
-    "enrolled": 1,
+    "enrolled": 2,
     "students": [
       {
         "name": "Claire",
         "signedAt": "2026-05-24T06:19:54.648Z"
+      },
+      {
+        "name": "CC",
+        "signedAt": "2026-06-01T08:48:15.454Z"
       }
     ],
     "description": "低空经济发展现状与未来展望"
